@@ -71,94 +71,46 @@ The goal is to uncover meaningful insights such as death percentages, vaccinatio
 
 ---
 
-## 📊 SQL Queries Performed
+## 📊 Some of SQL Queries Performed
 
-### 1. INNER JOIN — Deaths vs Vaccinations per Country per Day
-```sql
-SELECT d.location, d.date, d.total_deaths, v.total_vaccinations
+-- Shows each country’s daily record of total COVID deaths and vaccinations (joined by date)
+SELECT
+  d.location,
+  d.date,
+  d.total_deaths,
+  v.total_vaccinations
 FROM Covid_Deaths d
 INNER JOIN Covid_Vaccinations v
   ON d.iso_code = v.iso_code
   AND d.date = v.date
-WHERE d.continent IS NOT NULL
+WHERE d.continent IS NOT NULL -- excludes World / continent aggregate rows
 ORDER BY d.location, d.date;
-```
 
-### 2. Death Percentage vs Vaccination Rollout
-```sql
+-- Shows each country’s daily totals for deaths and vaccinations,
+-- along with the death percentage (deaths as % of total cases)
 SELECT d.location, d.date,
-  ROUND(d.total_deaths * 100.0 / NULLIF(d.total_cases, 0), 2) AS death_pct,
-  ROUND(v.people_fully_vaccinated * 100.0 / NULLIF(d.population, 0), 2) AS vax_pct
-FROM Covid_Deaths d
-INNER JOIN Covid_Vaccinations v
+  d.total_deaths, v.total_vaccinations,
+  ROUND((d.total_deaths * 100.0 / NULLIF(d.total_cases, 0)), 2) AS death_pct
+FROM Covid_Deaths d INNER JOIN Covid_Vaccinations v
   ON d.iso_code = v.iso_code AND d.date = v.date
-WHERE d.continent IS NOT NULL
-  AND v.people_fully_vaccinated IS NOT NULL
-ORDER BY d.location, d.date;
-```
+WHERE d.continent IS NOT NULL;
 
-### 3. Countries with Deaths but No Vaccination Data (LEFT JOIN Anti-Join)
-```sql
-SELECT d.location, d.date, d.total_cases, d.total_deaths, v.total_vaccinations
+-- Shows country-level records where death/case data exists
+-- but there is NO matching vaccination data for the same date
+SELECT
+  d.location,
+  d.date,
+  d.total_cases,
+  d.total_deaths,
+  v.total_vaccinations -- will always be NULL here
 FROM Covid_Deaths d
 LEFT JOIN Covid_Vaccinations v
-  ON d.iso_code = v.iso_code AND d.date = v.date
-WHERE d.continent IS NOT NULL
-  AND v.iso_code IS NULL
+  ON d.iso_code = v.iso_code
+  AND d.date = v.date
+WHERE d.continent IS NOT NULL -- exclude aggregate rows
+  AND v.iso_code IS NULL -- keep only rows with NO vaccination match
 ORDER BY d.location, d.date;
-```
-
-### 4. Continent-Level Deaths vs Vaccinations (GROUP BY)
-```sql
-SELECT d.continent,
-  SUM(d.new_deaths) AS total_deaths,
-  MAX(v.people_vaccinated) AS max_people_vaccinated
-FROM Covid_Deaths d
-INNER JOIN Covid_Vaccinations v
-  ON d.iso_code = v.iso_code AND d.date = v.date
-WHERE d.continent IS NOT NULL
-GROUP BY d.continent
-ORDER BY total_deaths DESC;
-```
-
-### 5. Running Total of Vaccinations (Window Function)
-```sql
-SELECT d.location, d.date, d.total_deaths, v.new_vaccinations,
-  SUM(v.new_vaccinations)
-    OVER (PARTITION BY d.location ORDER BY d.date) AS rolling_vax_total
-FROM Covid_Deaths d
-INNER JOIN Covid_Vaccinations v
-  ON d.iso_code = v.iso_code AND d.date = v.date
-WHERE d.continent IS NOT NULL
-ORDER BY d.location, d.date;
-```
-
-### 6. Full Outer Join — Unified Dataset (MySQL UNION workaround)
-```sql
-SELECT COALESCE(d.location, v.location) AS location,
-  COALESCE(d.date, v.date) AS date,
-  d.total_deaths, v.total_vaccinations,
-  CASE
-    WHEN d.iso_code IS NULL THEN 'vax only'
-    WHEN v.iso_code IS NULL THEN 'deaths only'
-    ELSE 'both'
-  END AS row_source
-FROM Covid_Deaths d
-LEFT JOIN Covid_Vaccinations v
-  ON d.iso_code = v.iso_code AND d.date = v.date
-UNION
-SELECT COALESCE(d.location, v.location),
-  COALESCE(d.date, v.date),
-  d.total_deaths, v.total_vaccinations,
-  CASE
-    WHEN d.iso_code IS NULL THEN 'vax only'
-    WHEN v.iso_code IS NULL THEN 'deaths only'
-    ELSE 'both'
-  END AS row_source
-FROM Covid_Deaths d
-RIGHT JOIN Covid_Vaccinations v
-  ON d.iso_code = v.iso_code AND d.date = v.date
-ORDER BY location, date;
+ 
 ```
 
 ## 🖥️ Power BI Dashboard

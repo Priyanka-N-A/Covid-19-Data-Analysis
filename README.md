@@ -9,9 +9,9 @@ Covid Vaccinations — tracks testing, vaccination rollout, and socio-economic i
 The goal is to uncover meaningful insights such as death percentages, vaccination rollout speed, continent-level comparisons, and running totals using SQL queries and visualized through a Power BI dashboard.
 
 📂 Dataset Information
-Files                   Rows       Columns         Description
-Covid_Deaths            20000                     Cases, deaths, ICU & hospital data
-Covid_Vaccinations      20000                     Tests, vaccinations & socio-economic data
+Files               !    Rows     !  Columns   !      Description
+Covid_Deaths        !    20000    !            !   Cases, deaths, ICU & hospital data
+Covid_Vaccinations  !    20000    !            !   Tests, vaccinations & socio-economic data
 
 📅 Date Range:
 01 January 2020 — 31 December 2021

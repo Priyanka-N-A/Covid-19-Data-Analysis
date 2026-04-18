@@ -13,7 +13,7 @@ Files                   Rows       Columns         Description
 Covid_Deaths            20000                     Cases, deaths, ICU & hospital data
 Covid_Vaccinations      20000                     Tests, vaccinations & socio-economic data
 
-📅 Date Range
+📅 Date Range:
 01 January 2020 — 31 December 2021
 
 🗂️ Dataset Columns
